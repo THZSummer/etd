@@ -150,24 +150,30 @@ flowchart LR
 
 ETD 核心逻辑与具体平台解耦，通过可插拔 Adapter 与外部系统交互：
 
-```
-┌─────────────────────────────────────┐
-│         ETD 核心逻辑                 │
-│   领域建模 │ 树生成 │ 任务执行 │ 演进  │
-└──────────────┬──────────────────────┘
-               │ 抽象接口 (Ports)
-               ▼
-┌─────────────────────────────────────┐
-│         Adapter 抽象层               │
-│  IExecutionAdapter │ IStorageAdapter │
-└──────────────┬──────────────────────┘
-               │
-    ┌──────────┼──────────┐
-    ▼          ▼          ▼
-┌────────┐ ┌────────┐ ┌────────┐
-│OpenCode│ │OpenClaw│ │ 自定义  │
-│Adapter │ │Adapter │ │Adapter │
-└────────┘ └────────┘ └────────┘
+```mermaid
+flowchart TB
+    subgraph ETD["ETD 核心逻辑"]
+        direction LR
+        A[领域建模] --> B[树生成] --> C[任务执行] --> D[演进]
+    end
+    
+    ETD -->|"抽象接口 (Ports)"| AdapterLayer
+    
+    subgraph AdapterLayer["Adapter 抽象层"]
+        direction LR
+        E[IExecutionAdapter] --> F[IStorageAdapter] --> G[INotificationAdapter] --> H[IAuthAdapter]
+    end
+    
+    AdapterLayer -->|"平台实现"| Platform
+    
+    subgraph Platform["执行平台"]
+        direction LR
+        P1[OpenCode<br/>Adapter] --> P2[OpenCode<br/>Adapter] --> P3[自定义<br/>Adapter]
+    end
+    
+    style ETD fill:#e0ffe0
+    style AdapterLayer fill:#ffe0e0
+    style Platform fill:#e0e0ff
 ```
 
 ### 平台支持
@@ -202,13 +208,19 @@ ETD 核心逻辑与具体平台解耦，通过可插拔 Adapter 与外部系统�
 
 ETD 核心数据模型（Expert / Task / Match / Organization / Evolution）：
 
-```
-任务(Task) ──需要分配──> 匹配(Match) ──查找到──> 专家(Expert)
-                                            │
-                                            └─构成──> 组织(Organization)
-                                                          │
-                                               修改 <─────┘
-                                               演进(Evolution)
+```mermaid
+flowchart LR
+    Task[任务<br/>Task] -.-|"需要分配"| Match[匹配<br/>Match]
+    Match -.-|"查找到"| Expert[专家<br/>Expert]
+    Expert -.->|"构成"| Org[组织<br/>Organization]
+    Org -.->|"修改"| Evolution[演进<br/>Evolution]
+    Task -.-> Evolution
+    
+    style Task fill:#e0e0ff
+    style Match fill:#ffe0e0
+    style Expert fill:#e0ffe0
+    style Org fill:#fffde0
+    style Evolution fill:#f0f0f0
 ```
 
 ## 开发说明
