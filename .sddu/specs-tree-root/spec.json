@@ -1,0 +1,153 @@
+{
+  "featureId": "ETD-001",
+  "featureName": "ETD (Expert Tree Design)",
+  "version": "2.1.0-spec",
+  "state": "specified",
+  "createdDate": "2026-04-18",
+  "lastUpdated": "2026-04-18",
+  "priority": "P0",
+  "estimatedEffort": "Large (3-4 人月)",
+  "targetUsers": ["Solo开发者", "小型团队", "中型团队"],
+  "coreScenario": "动态构建专业协作树的方法论，AI执行 + 人类看护，谋定而后动",
+  "metadata": {
+    "productName": "ETD",
+    "productFullName": "Expert Tree Design",
+    "productTagline": "AI执行 × 人类看护"
+  },
+  "corePrinciples": [
+    {
+      "id": "CP-001",
+      "name": "专业分工",
+      "description": "专业的事交给专业的 AI/人去做"
+    },
+    {
+      "id": "CP-002",
+      "name": "设计先行",
+      "description": "谋定而后动，思考规划先于行动"
+    },
+    {
+      "id": "CP-003",
+      "name": "双树并行",
+      "description": "AI执行树 + 人类看护树，节点一一对应"
+    },
+    {
+      "id": "CP-004",
+      "name": "领域无关",
+      "description": "是方法论而非具体解决方案，不绑定特定领域"
+    }
+  ],
+  "coreGoals": [
+    {
+      "id": "CG-001",
+      "name": "动态建树",
+      "description": "根据现实世界的团队、项目、领域，生成专业协作树"
+    },
+    {
+      "id": "CG-002",
+      "name": "演进",
+      "description": "树是活的，随现实变化生长凋落"
+    },
+    {
+      "id": "CG-003",
+      "name": "质量保障",
+      "description": "每个节点谋定后动，AI执行 + 人类看护双线并行"
+    }
+  ],
+  "userStories": {
+    "total": 5,
+    "items": [
+      {
+        "id": "US-001",
+        "title": "Solo 开发者寻求专业辅助",
+        "priority": "P0"
+      },
+      {
+        "id": "US-002",
+        "title": "团队负责人自动分配任务",
+        "priority": "P0"
+      },
+      {
+        "id": "US-003",
+        "title": "专业角色看护 AI 输出",
+        "priority": "P0"
+      },
+      {
+        "id": "US-004",
+        "title": "树的动态演进",
+        "priority": "P1"
+      },
+      {
+        "id": "US-005",
+        "title": "多领域适配",
+        "priority": "P2"
+      }
+    ]
+  },
+  "requirements": {
+    "functional": {
+      "total": 10,
+      "items": [
+        {"id": "FR-001", "name": "领域模型管理", "priority": "P0"},
+        {"id": "FR-002", "name": "专家节点注册", "priority": "P0"},
+        {"id": "FR-003", "name": "团队结构配置", "priority": "P0"},
+        {"id": "FR-004", "name": "动态树生成", "priority": "P0"},
+        {"id": "FR-005", "name": "任务分配与调度", "priority": "P0"},
+        {"id": "FR-006", "name": "设计先行约束", "priority": "P0"},
+        {"id": "FR-007", "name": "双树并行支持", "priority": "P0"},
+        {"id": "FR-008", "name": "树的演进机制", "priority": "P1"},
+        {"id": "FR-009", "name": "专家工作台", "priority": "P1"},
+        {"id": "FR-010", "name": "多领域适配", "priority": "P2"}
+      ]
+    },
+    "nonFunctional": {
+      "total": 17,
+      "categories": ["性能", "可用性", "安全性", "可扩展性", "兼容性"]
+    },
+    "edgeCases": {
+      "total": 5,
+      "items": [
+        {"id": "EC-001", "name": "专家节点匹配失败"},
+        {"id": "EC-002", "name": "循环依赖检测"},
+        {"id": "EC-003", "name": "并发任务冲突"},
+        {"id": "EC-004", "name": "网络分区容错"},
+        {"id": "EC-005", "name": "长时间运行任务处理"}
+      ]
+    }
+  },
+  "splitSuggestion": {
+    "original": "Discovery 3 层拆分 (Registry/Dispatcher/Workbench)",
+    "recommended": "Spec 4 个垂直 Feature 拆分",
+    "features": [
+      {
+        "id": "ETD-A",
+        "name": "领域建模 (Domain Modeling)",
+        "description": "定义领域、角色、专家和团队",
+        "includes": ["FR-001", "FR-002", "FR-003"]
+      },
+      {
+        "id": "ETD-B",
+        "name": "树生成 (Tree Generation)",
+        "description": "动态生成专业协作树",
+        "includes": ["FR-004"]
+      },
+      {
+        "id": "ETD-C",
+        "name": "任务执行 (Task Execution)",
+        "description": "任务分配、执行、审视的完整流程",
+        "includes": ["FR-005", "FR-006", "FR-007", "FR-009"]
+      },
+      {
+        "id": "ETD-D",
+        "name": "树演进 (Tree Evolution)",
+        "description": "树的动态生长、凋落和适应",
+        "includes": ["FR-008"]
+      }
+    ]
+  },
+  "nextSteps": [
+    "运行 @sddu-plan etd 开始技术规划",
+    "或基于 spec 的拆分建议，创建 4 个独立的子 Feature 目录"
+  ],
+  "specVersion": "1.0",
+  "specFormat": "sddu-spec-v1"
+}
