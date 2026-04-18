@@ -53,36 +53,50 @@
 
 #### Adapter 抽象层设计
 
-```
-┌─────────────────────────────────────────────────────────────┐
-│                    Adapter 抽象层 (Ports)                    │
-├─────────────────────────────────────────────────────────────┤
-│                                                             │
-│  ┌───────────────────┐  ┌───────────────────┐             │
-│  │ IExecutionAdapter │  │  IStorageAdapter  │             │
-│  │   (任务执行)       │  │    (数据存储)      │             │
-│  ├───────────────────┤  ├───────────────────┤             │
-│  │ execute(): Result │  │ save(): void      │             │
-│  │ delegate(): void  │  │ load(): Data      │             │
-│  │ cancel(): void    │  │ delete(): void    │             │
-│  └───────────────────┘  └───────────────────┘             │
-│                                                             │
-│  ┌───────────────────┐  ┌───────────────────┐             │
-│  │ INotificationAdap │  │  IAuthAdapter     │             │
-│  │   (通知推送)       │  │   (身份认证)       │             │
-│  ├───────────────────┤  ├───────────────────┤             │
-│  │ notify(): void    │  │ auth(): Token     │             │
-│  │ subscribe(): void │  │ validate(): bool  │             │
-│  └───────────────────┘  └───────────────────┘             │
-│                                                             │
-└─────────────────────────────────────────────────────────────┘
-        │               │               │               │
-        ▼               ▼               ▼               ▼
-┌───────────────┐ ┌───────────────┐ ┌───────────────┐ ┌───────────────┐
-│  OpenCode     │ │    OpenClaw   │ │    自定义      │ │   PostgreSQL  │
-│  Adapter      │ │   Adapter     │ │   Adapter     │ │   Adapter     │
-│  (实现)        │ │   (实现)      │ │   (实现)      │ │   (实现)      │
-└───────────────┘ └───────────────┘ └───────────────┘ └───────────────┘
+```mermaid
+graph TB
+    subgraph "Adapter 抽象层 (Ports)"
+        subgraph IExecutionAdapter
+            EA1[execute]
+            EA2[delegate]
+            EA3[cancel]
+        end
+        
+        subgraph IStorageAdapter
+            SA1[save]
+            SA2[load]
+            SA3[delete]
+            SA4[query]
+        end
+        
+        subgraph INotificationAdapter
+            NA1[notify]
+            NA2[subscribe]
+        end
+        
+        subgraph IAuthAdapter
+            AA1[auth]
+            AA2[validate]
+        end
+    end
+    
+    subgraph "具体实现"
+        AD1[OpenCode Adapter]
+        AD2[OpenClaw Adapter]
+        AD3[自定义 Adapter]
+        AD4[PostgreSQL Adapter]
+    end
+    
+    EA1 --> AD1
+    EA1 --> AD2
+    EA1 --> AD3
+    
+    SA1 --> AD4
+    
+    AD1 --> PL1[执行平台]
+    AD2 --> PL1
+    AD3 --> PL1
+    AD4 --> DB[(PostgreSQL)]
 ```
 
 #### 平台支持策略
@@ -98,53 +112,79 @@
 
 基于 spec 的 4 个垂直 Feature 划分：
 
-```
-ETD Core Modules
-│
-├── Feature A: Domain Modeling (领域建模)
-│   ├── Domain Service - 领域定义管理
-│   ├── Expert Service - 专家注册中心
-│   └── Team Service - 团队结构配置
-│
-├── Feature B: Tree Generation (树生成)
-│   ├── Tree Service - 动态树生成
-│   ├── Match Service - 专家匹配算法
-│   └── Visual Service - 树可视化
-│
-├── Feature C: Task Execution (任务执行)
-│   ├── Task Service - 任务生命周期
-│   ├── Dispatch Service - 任务调度
-│   └── Review Service - 人类审视
-│
-└── Feature D: Tree Evolution (树演进)
-    ├── Evolution Service - 演进引擎
-    ├── Policy Service - 策略配置
-    └── History Service - 历史记录
+```mermaid
+graph LR
+    subgraph "Feature A: 领域建模"
+        A1[Domain Service<br/>领域定义管理]
+        A2[Expert Service<br/>专家注册中心]
+        A3[Team Service<br/>团队结构配置]
+    end
+    
+    subgraph "Feature B: 树生成"
+        B1[Tree Service<br/>动态树生成]
+        B2[Match Service<br/>专家匹配算法]
+        B3[Visual Service<br/>树可视化]
+    end
+    
+    subgraph "Feature C: 任务执行"
+        C1[Task Service<br/>任务生命周期]
+        C2[Dispatch Service<br/>任务调度]
+        C3[Review Service<br/>人类审视]
+    end
+    
+    subgraph "Feature D: 树演进"
+        D1[Evolution Service<br/>演进引擎]
+        D2[Policy Service<br/>策略配置]
+        D3[History Service<br/>历史记录]
+    end
+    
+    A1 --> A2
+    A2 --> A3
+    A3 --> B1
+    B1 --> B2
+    B2 --> B3
+    B3 --> C1
+    C1 --> C2
+    C2 --> C3
+    C3 --> D1
+    D1 --> D2
+    D2 --> D3
 ```
 
 ### 1.3 双树并行架构
 
-```
-┌─────────────────────────────────────────────────────────────┐
-│                    双树并行架构 (Dual Tree)                    │
-├─────────────────────────────────────────────────────────────┤
-│                                                             │
-│   AI 执行树                          人类看护树              │
-│   ┌─────────────────┐               ┌─────────────────┐    │
-│   │ AI Coordinator  │◄─────────────►│ Human Lead      │    │
-│   └────────┬────────┘   状态同步    └────────┬────────┘    │
-│            │                                │             │
-│    ┌───────┼───────┐                ┌───────┼───────┐     │
-│    ▼       ▼       ▼                ▼       ▼       ▼     │
-│ ┌────┐  ┌────┐  ┌────┐          ┌────┐  ┌────┐  ┌────┐  │
-│ │AI-A│  │AI-B│  │AI-C│          │HumA│  │HumB│  │HumC│  │
-│ │设计│  │开发│  │测试│          │产品│  │开发│  │测试│  │
-│ └────┘  └────┘  └────┘          └────┘  └────┘  └────┘  │
-│                                                             │
-│   职责: 执行任务                    职责: 审视 AI 输出      │
-│   方式: 生成设计/代码               方式: 通过/打回         │
-│                                                             │
-└─────────────────────────────────────────────────────────────┘
+```mermaid
+graph LR
+    subgraph "AI 执行树"
+        AI1[AI Coordinator<br/>AI协调者]
+        AI2[AI 设计专家<br/>设计]
+        AI3[AI 开发专家<br/>开发]
+        AI4[AI 测试专家<br/>测试]
+        
+        AI1 --> AI2
+        AI1 --> AI3
+        AI1 --> AI4
+    end
+    
+    subgraph "人类看护树"
+        HU1[Human Lead<br/>人类负责人]
+        HU2[产品经理<br/>审视设计]
+        HU3[开发负责人<br/>审视代码]
+        HU4[测试负责人<br/>审视测试]
+        
+        HU1 --> HU2
+        HU1 --> HU3
+        HU1 --> HU4
+    end
+    
+    AI1 <-->|状态同步| HU1
+    AI2 <-->|状态同步| HU2
+    AI3 <-->|状态同步| HU3
+    AI4 <-->|状态同步| HU4
+    
+    HU2 -->|通过/打回| AI2
+    HU3 -->|通过/打回| AI3
+    HU4 -->|通过/打回| AI4
 ```
 
 ---
@@ -390,38 +430,64 @@ interface EvolutionModule {
 
 基于 spec 的**五元模型**，设计对应的数据库表结构：
 
-```
-┌─────────────────────────────────────────────────────────────┐
-│                    五元模型数据库映射                         │
-├─────────────────────────────────────────────────────────────┤
-│                                                             │
-│  ┌──────────────┐    ┌──────────────┐    ┌──────────────┐  │
-│  │   Expert     │    │    Task      │    │    Match     │  │
-│  │   专家表      │    │    任务表     │    │    匹配表     │  │
-│  ├──────────────┤    ├──────────────┤    ├──────────────┤  │
-│  │ id: PK       │    │ id: PK       │    │ id: PK       │  │
-│  │ name: string │    │ title: str   │    │ taskId: FK   │  │
-│  │ type: enum   │    │ desc: text   │    │ expertId: FK │  │
-│  │ capabilities │    │ status: enum │    │ score: float │  │
-│  │ llmConfig    │    │ priority     │    │ algorithm    │  │
-│  │ createdAt    │    │ deadline     │    │ createdAt    │  │
-│  └──────────────┘    └──────────────┘    └──────────────┘  │
-│                                                             │
-│  ┌──────────────┐    ┌──────────────┐                      │
-│  │ Organization │    │  Evolution   │                      │
-│  │   组织/树表   │    │   演进表      │                      │
-│  ├──────────────┤    ├──────────────┤                      │
-│  │ id: PK       │    │ id: PK       │                      │
-│  │ treeId: FK   │    │ entityType   │                      │
-│  │ expertId: FK │    │ entityId     │                      │
-│  │ parentId: FK │    │ changeType   │                      │
-│  │ role: string │    │ oldValue     │                      │
-│  │ level: int   │    │ newValue     │                      │
-│  │ path: ltree  │    │ triggeredBy  │                      │
-│  │ createdAt    │    │ createdAt    │                      │
-│  └──────────────┘    └──────────────┘                      │
-│                                                             │
-└─────────────────────────────────────────────────────────────┘
+```mermaid
+erDiagram
+    EXPERT {
+        uuid id PK
+        string name
+        string type
+        jsonb capabilities
+        jsonb llm_config
+        uuid user_id
+        timestamp created_at
+    }
+    
+    TASK {
+        uuid id PK
+        string title
+        text description
+        string type
+        string status
+        int priority
+        uuid assigned_to
+        timestamp deadline
+        jsonb input_data
+        jsonb output_data
+    }
+    
+    MATCH {
+        uuid id PK
+        uuid task_id FK
+        uuid expert_id FK
+        float score
+        string algorithm
+    }
+    
+    ORGANIZATION {
+        uuid id PK
+        uuid tree_id FK
+        uuid expert_id FK
+        uuid parent_id
+        string role
+        int level
+        ltree path
+    }
+    
+    EVOLUTION {
+        uuid id PK
+        string entity_type
+        uuid entity_id
+        string change_type
+        jsonb old_value
+        jsonb new_value
+        string triggered_by
+        timestamp created_at
+    }
+    
+    TASK ||--o{ MATCH : "需要分配"
+    MATCH }o--|| EXPERT : "查找到"
+    EXPERT ||--o{ ORGANIZATION : "构成"
+    ORGANIZATION }o--|| ORGANIZATION : "层级"
 ```
 
 ### 4.2 核心表结构
@@ -1037,43 +1103,30 @@ interface InterventionRule {
 
 基于 spec 的 4 个垂直 Feature，按照依赖关系分 4 个阶段实现：
 
-```
-Phase 1: 基础建模 (Week 1-3)
-├── Feature A: 领域建模
-│   ├── Domain Service - 领域定义 CRUD
-│   ├── Expert Service - 专家注册中心
-│   └── Team Service - 团队结构配置
-├── 核心数据模型落地
-└── 基础 API 实现
-
-Phase 2: 树生成 (Week 4-7)
-├── Feature B: 树生成
-│   ├── Tree Service - 动态树生成算法
-│   ├── Match Service - 专家匹配算法
-│   └── Visual Service - 树可视化
-├── 树生成算法实现
-├── 可视化组件开发
-└── 人工确认流程
-
-Phase 3: 执行核心 (Week 8-12)
-├── Feature C: 任务执行
-│   ├── Task Service - 任务生命周期管理
-│   ├── Dispatch Service - 任务调度
-│   └── Review Service - 人类审视流程
-├── 设计先行工作流
-├── 双树并行架构
-├── 专家工作台 (CLI + Web)
-└── 集成测试
-
-Phase 4: 演进能力 (Week 13-15)
-├── Feature D: 树演进
-│   ├── Evolution Service - 演进引擎
-│   ├── Policy Service - 策略配置
-│   └── History Service - 历史记录
-├── 四级干预策略
-├── 多级配置继承
-├── 历史记录与回滚
-└── 生产环境就绪
+```mermaid
+gantt
+    title ETD 开发阶段规划
+    dateFormat  YYYY-MM-DD
+    section Phase 1: 基础建模 (Week 1-3)
+    Feature A: 领域建模       :a1, 2026-04-20, 3w
+    核心数据模型落地          :a2, after a1, 1w
+    基础 API 实现            :a3, after a2, 1w
+    
+    section Phase 2: 树生成 (Week 4-7)
+    Feature B: 树生成        :b1, after a3, 4w
+    树生成算法实现           :b2, after b1, 1w
+    可视化组件开发           :b3, after b2, 1w
+    
+    section Phase 3: 执行核心 (Week 8-12)
+    Feature C: 任务执行      :c1, after b3, 5w
+    设计先行工作流           :c2, after c1, 1w
+    双树并行架构             :c3, after c2, 1w
+    专家工作台               :c4, after c3, 1w
+    
+    section Phase 4: 演进能力 (Week 13-15)
+    Feature D: 树演进        :d1, after c4, 3w
+    四级干预策略             :d2, after d1, 1w
+    历史记录与回滚           :d3, after d2, 1w
 ```
 
 ### 7.2 里程碑规划
@@ -1207,44 +1260,40 @@ docs/
 
 ### 8.1 模块依赖图
 
-```
-┌─────────────────────────────────────────────────────────────────┐
-│                        模块依赖关系图                            │
-└─────────────────────────────────────────────────────────────────┘
-
-                           ┌─────────────┐
-                           │   Shared    │
-                           │  (共享模块)  │
-                           └──────┬──────┘
-                                  │
-         ┌────────────────────────┼────────────────────────┐
-         │                        │                        │
-         ▼                        ▼                        ▼
-┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
-│  Domain Module  │    │  Expert Module  │    │   Team Module   │
-│   (领域建模)     │    │   (专家注册)     │    │   (团队配置)     │
-└────────┬────────┘    └────────┬────────┘    └────────┬────────┘
-         │                        │                        │
-         │                        │                        │
-         └────────────────────────┼────────────────────────┘
-                                  │
-                                  ▼
-                         ┌─────────────────┐
-                         │   Tree Module   │
-                         │   (树生成)       │
-                         └────────┬────────┘
-                                  │
-                                  ▼
-                         ┌─────────────────┐
-                         │   Task Module   │
-                         │   (任务执行)     │
-                         └────────┬────────┘
-                                  │
-                                  ▼
-                      ┌──────────────────────┐
-                      │   Evolution Module   │
-                      │     (树演进)          │
-                      └──────────────────────┘
+```mermaid
+graph TD
+    SHARED[Shared<br/>共享模块]
+    
+    DM[Domain Module<br/>领域建模]
+    EM[Expert Module<br/>专家注册]
+    TM[Team Module<br/>团队配置]
+    TRM[Tree Module<br/>树生成]
+    TKM[Task Module<br/>任务执行]
+    EVM[Evolution Module<br/>树演进]
+    
+    SHARED --> DM
+    SHARED --> EM
+    SHARED --> TM
+    
+    DM --> TRM
+    EM --> TRM
+    TM --> TRM
+    
+    TRM --> TKM
+    
+    TKM --> EVM
+    
+    EM -.->|需要领域定义| DM
+    TM -.->|需要领域+专家| DM
+    TM -.->|需要领域+专家| EM
+    TRM -.->|需要所有基础数据| DM
+    TRM -.->|需要所有基础数据| EM
+    TRM -.->|需要所有基础数据| TM
+    TKM -.->|需要树结构| TRM
+    TKM -.->|需要专家| EM
+    EVM -.->|需要树+专家+任务| TRM
+    EVM -.->|需要树+专家+任务| EM
+    EVM -.->|需要树+专家+任务| TKM
 ```
 
 ### 8.2 关键依赖关系

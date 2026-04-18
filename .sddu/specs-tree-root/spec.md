@@ -544,37 +544,36 @@ ETD 核心逻辑与具体平台解耦，通过以下抽象接口进行交互：
 
 ETD 核心逻辑与具体执行平台解耦，通过可插拔 Adapter 与外部系统交互：
 
-```
-┌─────────────────────────────────────────────────────────────┐
-│                        用户层 (CLI / Web)                    │
-└─────────────────────────────────────────────────────────────┘
-                              │
-┌─────────────────────────────────────────────────────────────┐
-│                        API 层                                │
-└─────────────────────────────────────────────────────────────┘
-                              │
-┌─────────────────────────────────────────────────────────────┐
-│                     核心服务层 (ETD Core)                     │
-│   领域管理 │ 专家注册 │ 树生成 │ 任务分配 │ 任务管理 │ 演进   │
-└─────────────────────────────────────────────────────────────┘
-                              │
-┌─────────────────────────────────────────────────────────────┐
-│                    Adapter 抽象层 (Ports)                    │
-│  IExecutionAdapter │ IStorageAdapter │ INotificationAdapter │
-└─────────────────────────────────────────────────────────────┘
-                              │
-        ┌─────────────────────┼─────────────────────┐
-        ▼                     ▼                     ▼
-┌───────────────┐   ┌───────────────┐   ┌───────────────┐
-│  OpenCode     │   │  OpenClaw     │   │  自定义       │
-│  Adapter      │   │  Adapter      │   │  Adapter      │
-└───────────────┘   └───────────────┘   └───────────────┘
-        │                     │                     │
-        └─────────────────────┼─────────────────────┘
-                              ▼
-┌─────────────────────────────────────────────────────────────┐
-│                      执行平台 (LLM + 工具)                    │
-└─────────────────────────────────────────────────────────────┘
+```mermaid
+graph TB
+    subgraph 用户层
+        UI[CLI / Web]
+    end
+    
+    subgraph API层
+        API[REST / WebSocket / GraphQL]
+    end
+    
+    subgraph 核心服务层
+        CORE[领域管理 │ 专家注册 │ 树生成 │ 任务分配 │ 任务管理 │ 演进]
+    end
+    
+    subgraph Adapter抽象层
+        ADAPT[IExecutionAdapter │ IStorageAdapter │ INotificationAdapter]
+    end
+    
+    subgraph 执行平台
+        PLATFORM1[OpenCode Adapter]
+        PLATFORM2[OpenClaw Adapter]
+        PLATFORM3[自定义 Adapter]
+    end
+    
+    UI --> API
+    API --> CORE
+    CORE <--> ADAPT
+    ADAPT --> PLATFORM1
+    ADAPT --> PLATFORM2
+    ADAPT --> PLATFORM3
 ```
 
 ### 5.2 核心模块职责
@@ -601,13 +600,14 @@ ETD 核心逻辑与具体执行平台解耦，通过可插拔 Adapter 与外部�
 | **Evolution (演进)** | 生长、凋落、适应的机制 | 变更历史、版本快照、触发器配置 |
 
 **五元关系**：
-```
-任务(Task) ──需要分配──> 匹配(Match) ──查找到──> 专家(Expert)
-                                           │
-                                           └─构成──> 组织(Organization)
-                                                         │
-                                              修改 <─────┘
-                                              演进(Evolution)
+
+```mermaid
+graph TB
+    TASK[Task 任务] -->|需要分配| MATCH[Match 匹配]
+    MATCH -->|查找到| EXPERT[Expert 专家]
+    EXPERT -->|构成| ORG[Organization 组织]
+    ORG -->|修改| EVO[Evolution 演进]
+    EVO -.->|触发| ORG
 ```
 
 ### 5.4 API 设计
@@ -747,34 +747,63 @@ ETD 核心逻辑与具体执行平台解耦，通过可插拔 Adapter 与外部�
 
 #### 推荐的 4 个垂直 Feature
 
-```
-ETD (Expert Tree Design)
-│
-├── Feature A: 领域建模 (Domain Modeling)
-│   ├── 领域定义管理 (FR-001)
-│   ├── 角色类型管理 (FR-001)
-│   ├── 专家注册 (FR-002)
-│   └── 团队配置 (FR-003)
-│   
-├── Feature B: 树生成 (Tree Generation)
-│   ├── 动态树生成算法 (FR-004)
-│   ├── 专家匹配算法
-│   ├── 树可视化
-│   └── 人工确认流程
-│   
-├── Feature C: 任务执行 (Task Execution)
-│   ├── 任务分配 (FR-005)
-│   ├── 设计先行工作流 (FR-006)
-│   ├── 双树并行支持 (FR-007)
-│   ├── 专家工作台 (FR-009)
-│   └── 人类审视流程
-│   
-└── Feature D: 树演进 (Tree Evolution)
-    ├── 生长机制 (FR-008)
-    ├── 凋落机制 (FR-008)
-    ├── 适应机制 (FR-008)
-    ├── 演进历史记录
-    └── 回滚机制
+```mermaid
+graph TD
+    ETD[ETD<br/>Expert Tree Design]
+    
+    FA[Feature A<br/>领域建模]
+    FB[Feature B<br/>树生成]
+    FC[Feature C<br/>任务执行]
+    FD[Feature D<br/>树演进]
+    
+    FA1[领域定义管理]
+    FA2[角色类型管理]
+    FA3[专家注册]
+    FA4[团队配置]
+    
+    FB1[动态树生成算法]
+    FB2[专家匹配算法]
+    FB3[树可视化]
+    FB4[人工确认流程]
+    
+    FC1[任务分配]
+    FC2[设计先行工作流]
+    FC3[双树并行支持]
+    FC4[专家工作台]
+    FC5[人类审视流程]
+    
+    FD1[生长机制]
+    FD2[凋落机制]
+    FD3[适应机制]
+    FD4[演进历史记录]
+    FD5[回滚机制]
+    
+    ETD --> FA
+    ETD --> FB
+    ETD --> FC
+    ETD --> FD
+    
+    FA --> FA1
+    FA --> FA2
+    FA --> FA3
+    FA --> FA4
+    
+    FB --> FB1
+    FB --> FB2
+    FB --> FB3
+    FB --> FB4
+    
+    FC --> FC1
+    FC --> FC2
+    FC --> FC3
+    FC --> FC4
+    FC --> FC5
+    
+    FD --> FD1
+    FD --> FD2
+    FD --> FD3
+    FD --> FD4
+    FD --> FD5
 ```
 
 #### 各 Feature 的核心价值
@@ -788,22 +817,25 @@ ETD (Expert Tree Design)
 
 #### 推荐的实现顺序
 
-```
-Phase 1: 基础建模 (Week 1-3)
-├── Feature A: 领域建模
-└── 核心数据模型落地
-
-Phase 2: 树生成 (Week 4-7)
-├── Feature B: 树生成
-└── 可视化与确认流程
-
-Phase 3: 执行核心 (Week 8-12)
-├── Feature C: 任务执行 (MVP 核心)
-└── 设计先行 + 双树并行
-
-Phase 4: 演进能力 (Week 13-15)
-├── Feature D: 树演进
-└── 生产环境就绪
+```mermaid
+gantt
+    title ETD 开发阶段规划
+    dateFormat  YYYY-MM-DD
+    section Phase 1: 基础建模 (Week 1-3)
+    Feature A: 领域建模       :a1, 2026-04-20, 3w
+    核心数据模型落地          :a2, after a1, 1w
+    
+    section Phase 2: 树生成 (Week 4-7)
+    Feature B: 树生成        :b1, after a2, 4w
+    可视化与确认流程          :b2, after b1, 1w
+    
+    section Phase 3: 执行核心 (Week 8-12)
+    Feature C: 任务执行      :c1, after b2, 5w
+    设计先行 + 双树并行       :c2, after c1, 1w
+    
+    section Phase 4: 演进能力 (Week 13-15)
+    Feature D: 树演进        :d1, after c2, 3w
+    生产环境就绪             :d2, after d1, 1w
 ```
 
 ### 7.3 为什么不采用 Discovery 的 3 层拆分
