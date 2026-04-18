@@ -1,39 +1,30 @@
-# ETD 规范目录
+# SDDU Specification Directory (Standard)
 
-> **产品**: ETD (Expert Tree Design)  
-> **版本**: 1.0.0  
-> **状态**: discovered
-
-## 目录结构
+## Directory Structure
 
 ```
-specs-tree-root/
-├── README.md                    # 本文件
-├── discovery.md                 # 需求挖掘报告
-├── state.json                   # 产品状态
-├── specs-tree-expert-node-registry/    # 子 Feature: 专家节点注册
-├── specs-tree-task-dispatcher/         # 子 Feature: 任务分配器
-└── specs-tree-expert-workbench/        # 子 Feature: 专家工作台
+.sddu/
+├── README.md              # This file  
+├── specs-tree-root/       # Specification Root Directory (SDDU naming convention)
+│   ├── README.md          # This instructions file
+│   └── specs-tree-[feature-n]/ # Feature N (SDDU naming convention)
+│       ├── discovery.md   # Requirement Discovery (Stage 0/6)
+│       ├── spec.md        # Specification document
+│       ├── plan.md        # Technical plan  
+│       ├── tasks.md       # Task breakdown
+│       ├── build.md       # Implementation (Stage 4/6)
+│       ├── review.md      # Code review (Stage 5/6)
+│       ├── validation.md  # Validation (Stage 6/6)
+│       └── state.json     # State file
 ```
 
-## 子 Feature 列表
+## Quick Start
 
-| Feature ID | 名称 | 优先级 | 状态 |
-|-----------|------|--------|------|
-| ETD-FR-REGISTRY-001 | 专家节点注册 | P0 | 📝 drafting |
-| ETD-FR-DISPATCHER-001 | 任务分配器 | P0 | 📝 drafting |
-| ETD-FR-WORKBENCH-001 | 专家工作台 | P1 | 📝 drafting |
+Use SDDU commands:
+- `@sddu start [feature name]` - Start new feature
+- `@sddu-discovery [topic]` - Discover requirements first stage 0/6!
+- `@sddu-spec [feature]` - Write specification
 
-## 依赖关系
+## New in SDDU
 
-```mermaid
-flowchart TD
-    A[expert-node-registry] --> B[task-dispatcher]
-    B --> C[expert-workbench]
-```
-
-## 文档导航
-
-- [需求挖掘报告](./discovery.md)
-- [产品规范](./spec.md)（待编写）
-- [技术规划](./plan.md)（待编写）
+This directory follows the new SDDU standard with 6+1 stage workflow.
