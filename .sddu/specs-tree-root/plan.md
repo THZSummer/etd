@@ -1,7 +1,7 @@
 # ETD (Expert Tree Design) 技术规划
 
 **Feature ID**: ETD-001  
-**版本**: 1.0.0-plan  
+**版本**: 1.1.0-plan  
 **状态**: planned  
 **创建日期**: 2026-04-18  
 **最后更新**: 2026-04-18  
@@ -37,6 +37,62 @@
 | 领域层 | 五元模型 + 领域逻辑 | 核心业务规则 |
 | 基础设施层 | DB / Cache / MQ / Storage | 数据持久化 |
 | 外部集成层 | LLM / Auth / Notification | 第三方服务 |
+| **平台适配层** | **Adapter 抽象层** | **平台无关架构** |
+
+### 1.1.1 平台无关架构设计
+
+> **核心决策**：ETD 是方法论，不是工具；通过 Adapter 接入中间工具能力，实现平台无关。
+
+#### 三层架构定位
+
+| 层次 | 定位 | 解决的问题 | ETD 职责 |
+|------|------|-----------|---------|
+| LLM | 能力引擎 | 智能从哪里来？ | 通过 Adapter 调用 |
+| 中间工具 | 执行框架 | 怎么执行、怎么协调？ | 通过 Adapter 接入 |
+| **ETD** | 业务方法论 | **怎么组织专业协作？** | **核心逻辑所在** |
+
+#### Adapter 抽象层设计
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                    Adapter 抽象层 (Ports)                    │
+├─────────────────────────────────────────────────────────────┤
+│                                                             │
+│  ┌───────────────────┐  ┌───────────────────┐             │
+│  │ IExecutionAdapter │  │  IStorageAdapter  │             │
+│  │   (任务执行)       │  │    (数据存储)      │             │
+│  ├───────────────────┤  ├───────────────────┤             │
+│  │ execute(): Result │  │ save(): void      │             │
+│  │ delegate(): void  │  │ load(): Data      │             │
+│  │ cancel(): void    │  │ delete(): void    │             │
+│  └───────────────────┘  └───────────────────┘             │
+│                                                             │
+│  ┌───────────────────┐  ┌───────────────────┐             │
+│  │ INotificationAdap │  │  IAuthAdapter     │             │
+│  │   (通知推送)       │  │   (身份认证)       │             │
+│  ├───────────────────┤  ├───────────────────┤             │
+│  │ notify(): void    │  │ auth(): Token     │             │
+│  │ subscribe(): void │  │ validate(): bool  │             │
+│  └───────────────────┘  └───────────────────┘             │
+│                                                             │
+└─────────────────────────────────────────────────────────────┘
+        │               │               │               │
+        ▼               ▼               ▼               ▼
+┌───────────────┐ ┌───────────────┐ ┌───────────────┐ ┌───────────────┐
+│  OpenCode     │ │    OpenClaw   │ │    自定义      │ │   PostgreSQL  │
+│  Adapter      │ │   Adapter     │ │   Adapter     │ │   Adapter     │
+│  (实现)        │ │   (实现)      │ │   (实现)      │ │   (实现)      │
+└───────────────┘ └───────────────┘ └───────────────┘ └───────────────┘
+```
+
+#### 平台支持策略
+
+| 平台 | 支持状态 | 实现优先级 | 说明 |
+|------|---------|-----------|------|
+| **OpenCode** | 优先支持 | P0 | AI Agent 运行环境，首批适配 |
+| **OpenClaw** | 计划支持 | P1 | Claude Code CLI，第二批适配 |
+| **自定义** | 完全支持 | P2 | 用户可自行实现 Adapter |
+| **本地 LLM** | 可选支持 | P2 | 本地模型备用方案 |
 
 ### 1.2 核心模块关系
 
@@ -1332,6 +1388,73 @@ ETD 是一个企业级系统，需要良好的架构设计、依赖注入、模�
 **负面**:
 - 学习曲线较陡
 - 样板代码较多
+
+---
+
+### ADR-004: 采用平台无关架构，通过 Adapter 接入执行平台
+
+**状态**: Accepted  
+**日期**: 2026-04-18  
+
+#### 背景
+SDDU 作为 OpenCode 插件，存在平台锁定、维护分裂、用户受限等问题。ETD 作为方法论，需要避免重蹈覆辙，实现真正的平台无关。
+
+#### 考虑选项
+1. **平台锁定**: 绑定特定平台（如 OpenCode）
+2. **多平台支持**: 为每个平台写独立实现
+3. **平台无关**: 通过 Adapter 抽象接口，接入不同平台
+
+#### 决策
+采用 **平台无关架构**，通过可插拔 Adapter 接入具体平台：
+1. **定义抽象接口**: IExecutionAdapter、IStorageAdapter、INotificationAdapter、IAuthAdapter
+2. **实现具体 Adapter**: OpenCode Adapter、OpenClaw Adapter、自定义 Adapter
+3. **核心逻辑与平台解耦**: ETD 核心只依赖接口，不关心具体实现
+
+#### 后果
+**正面**:
+- 真正实现平台无关，不被特定平台绑定
+- 用户可自行实现 Adapter 接入自定义平台
+- 易于扩展到新平台
+- 核心逻辑稳定，不随平台变化而变化
+
+**负面**:
+- 需要设计稳定的抽象接口（前期设计成本）
+- Adapter 实现需要适配不同平台的 API 差异
+- 接口变更可能影响核心逻辑
+
+#### 接口定义示例
+
+```typescript
+// 执行适配器接口
+interface IExecutionAdapter {
+  // 执行任务
+  execute(context: ExecutionContext): Promise<ExecutionResult>;
+  
+  // 委托任务给其他专家
+  delegate(taskId: string, targetExpertId: string): Promise<void>;
+  
+  // 取消执行
+  cancel(executionId: string): Promise<void>;
+  
+  // 获取执行状态
+  getStatus(executionId: string): Promise<ExecutionStatus>;
+}
+
+// 存储适配器接口
+interface IStorageAdapter {
+  // 保存数据
+  save(key: string, data: any): Promise<void>;
+  
+  // 加载数据
+  load(key: string): Promise<any>;
+  
+  // 删除数据
+  delete(key: string): Promise<void>;
+  
+  // 查询数据
+  query(filter: QueryFilter): Promise<any[]>;
+}
+```
 
 ---
 
