@@ -53,9 +53,13 @@ flowchart TD
 
 ## 文档
 
-- [需求挖掘报告](./.etd/specs-tree-root/discovery.md)
-- [产品规范](./.etd/specs-tree-root/spec.md)（待编写）
-- [技术规划](./.etd/specs-tree-root/plan.md)（待编写）
+- [需求挖掘报告](./.sddu/specs-tree-root/discovery.md)
+- [产品规范](./.sddu/specs-tree-root/spec.md)（待编写）
+- [技术规划](./.sddu/specs-tree-root/plan.md)（待编写）
+
+## 开发说明
+
+ETD 当前处于设计阶段，使用 `.sddu` 规范进行前期开发。待 ETD 成熟后，将切换到 `.etd` 规范实现自迭代。
 
 ## License
 
