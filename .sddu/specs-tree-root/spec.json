@@ -1,18 +1,52 @@
 {
   "featureId": "ETD-001",
   "featureName": "ETD (Expert Tree Design)",
-  "version": "2.1.0-spec",
+  "version": "2.3.0-spec",
   "state": "specified",
   "createdDate": "2026-04-18",
-  "lastUpdated": "2026-04-18",
+  "lastUpdated": "2026-04-30",
   "priority": "P0",
   "estimatedEffort": "Large (3-4 人月)",
   "targetUsers": ["Solo开发者", "小型团队", "中型团队"],
+  "primaryUser": "团队",
   "coreScenario": "动态构建专业协作树的方法论，AI执行 + 人类看护，谋定而后动",
   "metadata": {
     "productName": "ETD",
     "productFullName": "Expert Tree Design",
-    "productTagline": "AI执行 × 人类看护"
+    "productTagline": "AI执行 × 人类看护",
+    "isOpenSource": false,
+    "businessModel": "核心开源 + 官方 SaaS 服务"
+  },
+  "productForm": {
+    "strategy": "三层产品形态",
+    "layers": [
+      {
+        "id": "L1",
+        "name": "核心层",
+        "form": "SDK / 框架",
+        "targetUsers": ["开发者", "企业"],
+        "value": "平台无关，可嵌入任意系统",
+        "deployment": "开源 / 闭源授权可选"
+      },
+      {
+        "id": "L2",
+        "name": "工具层",
+        "form": "CLI 工具",
+        "targetUsers": ["Solo 开发者", "技术团队"],
+        "value": "开箱即用，命令行交互",
+        "deployment": "本地安装"
+      },
+      {
+        "id": "L3",
+        "name": "服务层",
+        "form": "Web 应用 (SaaS)",
+        "targetUsers": ["团队", "非技术成员"],
+        "value": "可视化协作、团队管理、实时同步",
+        "deployment": "官方托管 / 企业自托管",
+        "isPrimary": true
+      }
+    ],
+    "relationshipWithSDDU": "完全独立的全新产品，不依赖 SDDU 生态"
   },
   "corePrinciples": [
     {

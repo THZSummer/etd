@@ -3,8 +3,9 @@
   "productFullName": "Expert Tree Design",
   "productTagline": "AI执行 × 人类看护",
   "featureId": "ETD-001",
-  "state": "discovered",
+  "state": "specified",
   "createdDate": "2026-04-18",
+  "lastUpdated": "2026-04-30",
   "priority": "P0",
   "isParent": true,
   "children": [
@@ -14,6 +15,7 @@
   ],
   "estimatedEffort": "Large",
   "targetUsers": ["Solo开发者", "小型团队", "中型团队"],
+  "primaryUser": "团队",
   "coreScenario": "动态构建专业协作树的方法论，AI执行 + 人类看护，谋定而后动",
   "corePrinciples": [
     "专业分工：专业的事交给专业的AI/人去做",
@@ -31,5 +33,15 @@
     "T": "Tree - 动态协作树",
     "D": "Design - 设计先行（谋定而后动）"
   },
-  "version": "2.1.0"
+  "productForm": {
+    "strategy": "三层产品形态",
+    "layers": [
+      { "id": "L1", "name": "核心层", "form": "SDK / 框架", "targetUsers": ["开发者", "企业"], "deployment": "开源 / 闭源授权可选" },
+      { "id": "L2", "name": "工具层", "form": "CLI 工具", "targetUsers": ["Solo 开发者", "技术团队"], "deployment": "本地安装" },
+      { "id": "L3", "name": "服务层", "form": "Web 应用 (SaaS)", "targetUsers": ["团队", "非技术成员"], "deployment": "官方托管 / 企业自托管", "isPrimary": true }
+    ],
+    "businessModel": "核心开源 + 官方 SaaS 服务",
+    "relationshipWithSDDU": "完全独立的全新产品"
+  },
+  "version": "2.3.0"
 }
